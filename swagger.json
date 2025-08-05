@@ -1,0 +1,297 @@
+{
+     "openapi": "3.0.0",
+     "info": {
+          "title": "WhatsApp API",
+          "version": "1.0.0",
+          "description": "A robust WhatsApp messaging API built with whatsapp-web.js",
+          "contact": {
+               "name": "API Support",
+               "email": "support@example.com"
+          }
+     },
+     "servers": [
+          {
+               "url": "http://localhost:3001/api",
+               "description": "Development server"
+          }
+     ],
+     "paths": {
+          "/sessions": {
+               "post": {
+                    "summary": "Create a new WhatsApp session",
+                    "tags": [
+                         "Sessions"
+                    ],
+                    "requestBody": {
+                         "required": false,
+                         "content": {
+                              "application/json": {
+                                   "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                             "sessionId": {
+                                                  "type": "string",
+                                                  "description": "Optional custom session ID"
+                                             }
+                                        }
+                                   }
+                              }
+                         }
+                    },
+                    "responses": {
+                         "201": {
+                              "description": "Session created successfully"
+                         },
+                         "400": {
+                              "description": "Bad request"
+                         }
+                    }
+               },
+               "get": {
+                    "summary": "Get all sessions",
+                    "tags": [
+                         "Sessions"
+                    ],
+                    "responses": {
+                         "200": {
+                              "description": "List of all sessions"
+                         }
+                    }
+               }
+          },
+          "/sessions/{sessionId}": {
+               "get": {
+                    "summary": "Get session status",
+                    "tags": [
+                         "Sessions"
+                    ],
+                    "parameters": [
+                         {
+                              "in": "path",
+                              "name": "sessionId",
+                              "required": true,
+                              "schema": {
+                                   "type": "string"
+                              }
+                         }
+                    ],
+                    "responses": {
+                         "200": {
+                              "description": "Session status retrieved successfully"
+                         },
+                         "404": {
+                              "description": "Session not found"
+                         }
+                    }
+               },
+               "delete": {
+                    "summary": "Destroy session",
+                    "tags": [
+                         "Sessions"
+                    ],
+                    "parameters": [
+                         {
+                              "in": "path",
+                              "name": "sessionId",
+                              "required": true,
+                              "schema": {
+                                   "type": "string"
+                              }
+                         }
+                    ],
+                    "responses": {
+                         "200": {
+                              "description": "Session destroyed successfully"
+                         },
+                         "404": {
+                              "description": "Session not found"
+                         }
+                    }
+               }
+          },
+          "/sessions/{sessionId}/send-text": {
+               "post": {
+                    "summary": "Send text message",
+                    "tags": [
+                         "Messages"
+                    ],
+                    "parameters": [
+                         {
+                              "in": "path",
+                              "name": "sessionId",
+                              "required": true,
+                              "schema": {
+                                   "type": "string"
+                              }
+                         }
+                    ],
+                    "requestBody": {
+                         "required": true,
+                         "content": {
+                              "application/json": {
+                                   "schema": {
+                                        "type": "object",
+                                        "required": [
+                                             "to",
+                                             "message"
+                                        ],
+                                        "properties": {
+                                             "to": {
+                                                  "type": "string",
+                                                  "description": "Phone number or chat ID"
+                                             },
+                                             "message": {
+                                                  "type": "string",
+                                                  "description": "Text message to send"
+                                             }
+                                        }
+                                   }
+                              }
+                         }
+                    },
+                    "responses": {
+                         "200": {
+                              "description": "Message sent successfully"
+                         },
+                         "400": {
+                              "description": "Bad request"
+                         }
+                    }
+               }
+          },
+          "/sessions/{sessionId}/send-media": {
+               "post": {
+                    "summary": "Send media message",
+                    "tags": [
+                         "Messages"
+                    ],
+                    "parameters": [
+                         {
+                              "in": "path",
+                              "name": "sessionId",
+                              "required": true,
+                              "schema": {
+                                   "type": "string"
+                              }
+                         }
+                    ],
+                    "requestBody": {
+                         "required": true,
+                         "content": {
+                              "multipart/form-data": {
+                                   "schema": {
+                                        "type": "object",
+                                        "required": [
+                                             "to",
+                                             "file"
+                                        ],
+                                        "properties": {
+                                             "to": {
+                                                  "type": "string",
+                                                  "description": "Phone number or chat ID"
+                                             },
+                                             "file": {
+                                                  "type": "string",
+                                                  "format": "binary",
+                                                  "description": "Media file to send"
+                                             },
+                                             "caption": {
+                                                  "type": "string",
+                                                  "description": "Optional caption for the media"
+                                             }
+                                        }
+                                   }
+                              }
+                         }
+                    },
+                    "responses": {
+                         "200": {
+                              "description": "Media sent successfully"
+                         },
+                         "400": {
+                              "description": "Bad request"
+                         }
+                    }
+               }
+          },
+          "/health": {
+               "get": {
+                    "summary": "Health check",
+                    "tags": [
+                         "System"
+                    ],
+                    "responses": {
+                         "200": {
+                              "description": "Service is healthy"
+                         }
+                    }
+               }
+          }
+     },
+     "components": {
+          "schemas": {
+               "ApiResponse": {
+                    "type": "object",
+                    "properties": {
+                         "success": {
+                              "type": "boolean",
+                              "description": "Indicates if the request was successful"
+                         },
+                         "data": {
+                              "type": "object",
+                              "description": "Response data (when successful)"
+                         },
+                         "error": {
+                              "type": "string",
+                              "description": "Error message (when unsuccessful)"
+                         },
+                         "message": {
+                              "type": "string",
+                              "description": "Additional message"
+                         }
+                    }
+               },
+               "WhatsAppSession": {
+                    "type": "object",
+                    "properties": {
+                         "id": {
+                              "type": "string",
+                              "description": "Unique session identifier"
+                         },
+                         "status": {
+                              "type": "string",
+                              "enum": [
+                                   "initializing",
+                                   "qr",
+                                   "authenticated",
+                                   "ready",
+                                   "disconnected"
+                              ],
+                              "description": "Current session status"
+                         },
+                         "qrCode": {
+                              "type": "string",
+                              "description": "QR code string (when status is qr)"
+                         },
+                         "clientInfo": {
+                              "type": "object",
+                              "properties": {
+                                   "pushname": {
+                                        "type": "string",
+                                        "description": "WhatsApp display name"
+                                   },
+                                   "wid": {
+                                        "type": "string",
+                                        "description": "WhatsApp ID"
+                                   },
+                                   "platform": {
+                                        "type": "string",
+                                        "description": "WhatsApp platform"
+                                   }
+                              }
+                         }
+                    }
+               }
+          }
+     }
+}
