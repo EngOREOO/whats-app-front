@@ -370,6 +370,11 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Health check endpoint for Cloud Run
+app.get('/healthz', (req, res) => {
+  res.status(200).send('ok');
+});
+
 // Swagger JSON endpoint
 app.get('/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
@@ -392,10 +397,12 @@ process.on('SIGINT', () => {
 });
 
 // Start server
-const server = app.listen(config.port, '0.0.0.0', () => {
-  logger.info(`🚀 WhatsApp API Server running on port ${config.port}`);
-  logger.info(`📚 API Documentation: http://localhost:${config.port}/api-docs`);
-  logger.info(`🏥 Health Check: http://localhost:${config.port}/api/health`);
+const PORT = Number(process.env.PORT) || 8080;
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server listening on port ${PORT}`);
+  logger.info(`🚀 WhatsApp API Server running on port ${PORT}`);
+  logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+  logger.info(`🏥 Health Check: http://localhost:${PORT}/api/health`);
   logger.info(`🌍 Environment: ${config.nodeEnv}`);
 });
 
