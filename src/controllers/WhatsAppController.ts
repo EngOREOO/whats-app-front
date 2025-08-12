@@ -47,14 +47,12 @@ export class WhatsAppController {
 
       res.status(201).json(response);
     } catch (error) {
-      console.error('Init session error:', error);
       const response: ApiResponse = {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
-        message: "Failed to initialize session",
       };
 
-      res.status(500).json(response);
+      res.status(400).json(response);
     }
   };
 

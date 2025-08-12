@@ -1,13 +1,20 @@
 import express from 'express';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
-import { config } from './config';
+import { config, isDevelopment, isProduction } from './config';
 import routes from './routes';
 import { errorHandler, notFound } from './middlewares/errorHandler';
 import { logger } from './utils/logger';
 
 const app = express();
+
+// Trust proxy when behind Nginx (ensures correct IP/proto for cookies/sessions)
+app.set('trust proxy', 1);
+
+// Constants for binding
+const HOST = '127.0.0.1';
+const PORT = 5000;
 
 // Swagger configuration
 const swaggerOptions = {
@@ -305,35 +312,44 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(cors({
-  origin(origin, cb) {
-    if (!origin) return cb(null, true); // allow Postman/SSR
-    if (config.corsOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error(`Not allowed by CORS: ${origin}`));
+
+// CORS configuration
+const PROD_ORIGINS = ['https://api.codiaumtech.com'];
+const DEV_ORIGINS = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5000',
+  'http://127.0.0.1:5000'
+];
+
+const corsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g., curl, Postman) which have no origin
+    if (!origin) return callback(null, true);
+
+    const allowed = isProduction ? PROD_ORIGINS : [...PROD_ORIGINS, ...DEV_ORIGINS];
+    if (allowed.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
 
-// Preflight handler
-app.options('*', (req, res) => {
-  const origin = req.headers.origin as string | undefined;
-  const allowed = !!origin && config.corsOrigins.includes(origin);
-  if (allowed) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Vary', 'Origin');
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers',
-    (req.headers['access-control-request-headers'] as string) || 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  res.status(204).end();
-});
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Logging middleware
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path} - ${req.ip}`);
   next();
+});
+
+// Liveness/Readiness health check
+app.get('/healthz', (_req, res) => {
+  res.status(200).json({ ok: true });
 });
 
 // API Documentation
@@ -354,24 +370,12 @@ app.get('/', (req, res) => {
     documentation: `${config.apiBaseUrl.replace('/api', '')}/api-docs`,
     endpoints: {
       health: '/api/health',
+      healthz: '/healthz',
       sessions: '/api/sessions',
       bulkJobs: '/api/bulk-jobs',
       documentation: '/api-docs'
     }
   });
-});
-
-// Additional health check for Cloud Run
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    service: 'WhatsApp API'
-  });
-});
-
-app.get('/healthz', (_req, res) => {
-  res.status(200).send('ok');
 });
 
 // Swagger JSON endpoint
@@ -384,21 +388,15 @@ app.get('/swagger.json', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  process.exit(0);
+// Start server (bind explicitly to 127.0.0.1:5000)
+const server = app.listen(PORT, HOST, () => {
+  logger.info('Backend running on http://127.0.0.1:5000');
+  // Keep informative logs for local dev
+  if (isDevelopment) {
+    logger.info(`📚 API Documentation: http://127.0.0.1:${PORT}/api-docs`);
+    logger.info(`🏥 Health Check: http://127.0.0.1:${PORT}/api/health`);
+    logger.info(`🩺 Liveness: http://127.0.0.1:${PORT}/healthz`);
+  }
 });
-
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
-
-// Start server
-const PORT = Number(process.env.PORT) || 8080;
-app.listen(PORT, '0.0.0.0', () => console.log(`Server listening on http://0.0.0.0:${PORT}`));
-process.on('uncaughtException', e => console.error('uncaughtException:', e));
-process.on('unhandledRejection', e => console.error('unhandledRejection:', e));
 
 export default app; 
