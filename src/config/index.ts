@@ -27,5 +27,5 @@ if (!fs.existsSync(config.uploadPath)) {
   fs.mkdirSync(config.uploadPath, { recursive: true });
 }
 
-// Update CORS configuration to allow requests from the new frontend origin
-config.corsOrigin = "https://wh-front.codiaumtech.com";
+// Update CORS configuration to allow requests from the correct frontend origin
+config.corsOrigin = "https://api.codiaumtech.com";
