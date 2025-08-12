@@ -6,9 +6,9 @@ const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
   .split(',').map(s => s.trim()).filter(Boolean);
 
 export const config = {
-  port: parseInt(process.env.PORT || "3001", 10),
+  port: parseInt(process.env.PORT || "8080", 10),
   nodeEnv: process.env.NODE_ENV || "production",
-  apiBaseUrl: process.env.API_BASE_URL || "http://localhost:3001/api",
+  apiBaseUrl: process.env.API_BASE_URL || "http://localhost:8080/api",
   corsOrigins,
   sessionPath: process.env.SESSION_PATH || "./sessions",
   maxSessions: parseInt(process.env.MAX_SESSIONS || "10", 10),
