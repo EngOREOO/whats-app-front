@@ -12,9 +12,9 @@ const app = express();
 // Trust proxy when behind Nginx (ensures correct IP/proto for cookies/sessions)
 app.set('trust proxy', 1);
 
-// Constants for binding
-const HOST = '127.0.0.1';
-const PORT = 5000;
+// Constants for binding (Cloud Run compatible)
+const HOST = '0.0.0.0';
+const PORT = parseInt(process.env.PORT || '8080', 10);
 
 // Swagger configuration
 const swaggerOptions = {
@@ -313,33 +313,15 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// CORS configuration
-const PROD_ORIGINS = ['https://api.codiaumtech.com'];
-const DEV_ORIGINS = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://localhost:5000',
-  'http://127.0.0.1:5000'
-];
-
+// CORS configuration (simplified for Cloud Run)
 const corsOptions: CorsOptions = {
-  origin: (origin, callback) => {
-    // Allow non-browser requests (e.g., curl, Postman) which have no origin
-    if (!origin) return callback(null, true);
-
-    const allowed = isProduction ? PROD_ORIGINS : [...PROD_ORIGINS, ...DEV_ORIGINS];
-    if (allowed.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
-  },
+  origin: true, // Allow all origins for now
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -388,14 +370,14 @@ app.get('/swagger.json', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server (bind explicitly to 127.0.0.1:5000)
+// Start server (Cloud Run compatible: 0.0.0.0:$PORT)
 const server = app.listen(PORT, HOST, () => {
-  logger.info('Backend running on http://127.0.0.1:5000');
+  logger.info(`Backend running on http://${HOST}:${PORT}`);
   // Keep informative logs for local dev
   if (isDevelopment) {
-    logger.info(`📚 API Documentation: http://127.0.0.1:${PORT}/api-docs`);
-    logger.info(`🏥 Health Check: http://127.0.0.1:${PORT}/api/health`);
-    logger.info(`🩺 Liveness: http://127.0.0.1:${PORT}/healthz`);
+    logger.info(`📚 API Documentation: http://${HOST}:${PORT}/api-docs`);
+    logger.info(`🏥 Health Check: http://${HOST}:${PORT}/api/health`);
+    logger.info(`🩺 Liveness: http://${HOST}:${PORT}/healthz`);
   }
 });
 
