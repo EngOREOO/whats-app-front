@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Client, LocalAuth, MessageMedia } from "whatsapp-web.js";
 import { config } from "../config";
 import { SendMessageResponse, WhatsAppSession, BulkMessageRequest, BulkMessageResponse, BulkMessageStatus, PersonalizedBulkMessageRequest } from "../types";
+import { getPuppeteerOptions } from "../utils/launchBrowser";
 
 export class WhatsAppService {
   private sessions: Map<string, { client: Client; session: WhatsAppSession }> =
@@ -95,19 +96,7 @@ export class WhatsAppService {
         clientId: id,
         dataPath: path.join(config.sessionPath, id),
       }),
-      puppeteer: {
-        headless: true,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-accelerated-2d-canvas",
-          "--no-first-run",
-          "--no-zygote",
-          "--single-process",
-          "--disable-gpu",
-        ],
-      },
+      puppeteer: getPuppeteerOptions(),
     });
 
     this.setupClientEvents(client, session);

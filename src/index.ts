@@ -306,9 +306,29 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cors({
-  origin: '*', // Allow requests from any domain
-  credentials: true
+  origin(origin, cb) {
+    if (!origin) return cb(null, true); // allow Postman/SSR
+    if (config.corsOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  credentials: true,
 }));
+
+// Preflight handler
+app.options('*', (req, res) => {
+  const origin = req.headers.origin as string | undefined;
+  const allowed = !!origin && config.corsOrigins.includes(origin);
+  if (allowed) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers',
+    (req.headers['access-control-request-headers'] as string) || 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.status(204).end();
+});
 
 // Logging middleware
 app.use((req, res, next) => {

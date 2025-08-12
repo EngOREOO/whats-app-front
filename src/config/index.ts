@@ -2,11 +2,14 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
 export const config = {
   port: parseInt(process.env.PORT || "3001", 10),
-  nodeEnv: process.env.NODE_ENV || "development",
+  nodeEnv: process.env.NODE_ENV || "production",
   apiBaseUrl: process.env.API_BASE_URL || "http://localhost:3001/api",
-  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  corsOrigins,
   sessionPath: process.env.SESSION_PATH || "./sessions",
   maxSessions: parseInt(process.env.MAX_SESSIONS || "10", 10),
   uploadPath: process.env.UPLOAD_PATH || "./uploads",
@@ -26,6 +29,3 @@ if (!fs.existsSync(config.sessionPath)) {
 if (!fs.existsSync(config.uploadPath)) {
   fs.mkdirSync(config.uploadPath, { recursive: true });
 }
-
-// Update CORS configuration to allow requests from the correct frontend origin
-config.corsOrigin = "https://api.codiaumtech.com";
