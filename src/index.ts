@@ -370,8 +370,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Health check endpoint for Cloud Run
-app.get('/healthz', (req, res) => {
+app.get('/healthz', (_req, res) => {
   res.status(200).send('ok');
 });
 
@@ -398,12 +397,8 @@ process.on('SIGINT', () => {
 
 // Start server
 const PORT = Number(process.env.PORT) || 8080;
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server listening on port ${PORT}`);
-  logger.info(`🚀 WhatsApp API Server running on port ${PORT}`);
-  logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-  logger.info(`🏥 Health Check: http://localhost:${PORT}/api/health`);
-  logger.info(`🌍 Environment: ${config.nodeEnv}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`Server listening on http://0.0.0.0:${PORT}`));
+process.on('uncaughtException', e => console.error('uncaughtException:', e));
+process.on('unhandledRejection', e => console.error('unhandledRejection:', e));
 
 export default app; 
