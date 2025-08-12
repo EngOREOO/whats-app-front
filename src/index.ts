@@ -361,6 +361,15 @@ app.get('/', (req, res) => {
   });
 });
 
+// Additional health check for Cloud Run
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    service: 'WhatsApp API'
+  });
+});
+
 // Swagger JSON endpoint
 app.get('/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');

@@ -1,0 +1,38 @@
+steps:
+  # Build the container image using Google Cloud Buildpacks
+  - name: 'gcr.io/k8s-skaffold/pack'
+    entrypoint: 'pack'
+    args:
+      - 'build'
+      - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/$_SERVICE_NAME:$COMMIT_SHA'
+      - '--builder=gcr.io/buildpacks/builder:v1'
+      - '--network=cloudbuild'
+      - '--path=.'
+      - '--env=GOOGLE_RUNTIME_VERSION=24'
+      - '--env=NODE_ENV=production'
+
+  # Deploy the container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'services'
+      - 'update'
+      - '$_SERVICE_NAME'
+      - '--platform=managed'
+      - '--image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/$_SERVICE_NAME:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--timeout=300'
+      - '--set-env-vars=NODE_ENV=production,PORT=8080,CHROMIUM_PATH=/usr/bin/chromium'
+
+substitutions:
+  _SERVICE_NAME: 'whatsapp-api'
+  _REGION: 'europe-west1'
+  _REPOSITORY: 'cloud-run-source-deploy'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
