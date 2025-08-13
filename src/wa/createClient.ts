@@ -1,13 +1,11 @@
 import { Client, LocalAuth } from 'whatsapp-web.js';
-import chromium from '@sparticuz/chromium';
 import { promises as fs } from 'fs';
 import path from 'path';
 
 const DATA_BASE = process.env.WWEBJS_DATA_PATH || '/tmp/wwebjs_auth';
 
 export async function createWhatsAppClient(sessionId?: string) {
-  // Use system Chromium if available, otherwise fall back to @sparticuz/chromium
-  const executablePath = process.env.CHROMIUM_PATH || await chromium.executablePath();
+  const executablePath = '/usr/bin/chromium'; // hard lock for Cloud Run Docker image
   const args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
@@ -15,18 +13,11 @@ export async function createWhatsAppClient(sessionId?: string) {
     '--no-zygote',
     '--single-process',
     '--disable-gpu',
-    '--disable-software-rasterizer',
-    '--disable-extensions',
-    '--disable-background-timer-throttling',
-    '--disable-backgrounding-occluded-windows',
-    '--disable-renderer-backgrounding',
-    '--disable-features=TranslateUI',
-    '--disable-ipc-flooding-protection',
+    '--headless=new'
   ];
-  const headless = true; // Always headless in Cloud Run
 
-  // Log chromium config on first init
-  console.log(`[WhatsApp] Chromium executablePath: ${executablePath}, args count: ${args.length}`);
+  // Log puppeteer config on startup
+  console.log('[PUPPETEER]', { executablePath, argsCount: args.length });
 
   await fs.mkdir(DATA_BASE, { recursive: true });
 
@@ -35,7 +26,7 @@ export async function createWhatsAppClient(sessionId?: string) {
       dataPath: DATA_BASE,
       clientId: sessionId || 'default',
     }),
-    puppeteer: { executablePath, args, headless },
+    puppeteer: { executablePath, headless: true, args },
   });
 
   return client;

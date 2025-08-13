@@ -3,13 +3,15 @@ import puppeteer from 'puppeteer-core';
 
 export async function diagPuppeteer(req: Request, res: Response): Promise<void> {
   try {
-    const executablePath = process.env.CHROMIUM_PATH || '/usr/bin/chromium';
+    const executablePath = '/usr/bin/chromium'; // hard lock for Cloud Run Docker image
     const args = [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--no-zygote',
-      '--single-process'
+      '--single-process',
+      '--disable-gpu',
+      '--headless=new'
     ];
     const start = Date.now();
     const browser = await puppeteer.launch({ 
