@@ -48,7 +48,7 @@ export class WhatsAppController {
       res.status(201).json(response);
     } catch (error) {
       const msg = String((error as any)?.message || error);
-      const isChromiumLaunch = /Failed to launch the browser process|libnss3|Chromium|chrome|puppeteer/i.test(msg);
+      const isChromiumLaunch = /Failed to launch the browser process|Chromium|libnss3/i.test(msg);
       
       if (isChromiumLaunch) {
         res.set('Retry-After', '30');

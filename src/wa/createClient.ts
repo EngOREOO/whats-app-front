@@ -1,8 +1,11 @@
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import chromium from '@sparticuz/chromium';
-import puppeteer from 'puppeteer-core';
+import { promises as fs } from 'fs';
+import path from 'path';
 
-export async function createWhatsAppClient(sessionId?: string): Promise<Client> {
+const DATA_BASE = process.env.WWEBJS_DATA_PATH || '/tmp/wwebjs_auth';
+
+export async function createWhatsAppClient(sessionId?: string) {
   const executablePath = await chromium.executablePath();
   const args = [
     ...chromium.args,
@@ -14,14 +17,16 @@ export async function createWhatsAppClient(sessionId?: string): Promise<Client> 
   ];
   const headless = true; // Always headless in Cloud Run
 
-  const auth = new LocalAuth({
-    // NOTE: Cloud Run is stateless; prefer external storage later.
-    dataPath: process.env.WWEBJS_DATA_PATH || './.wwebjs_auth',
-    clientId: sessionId || 'default',
-  });
+  // Log chromium config on first init
+  console.log(`[WhatsApp] Chromium executablePath: ${executablePath}, args count: ${args.length}`);
+
+  await fs.mkdir(DATA_BASE, { recursive: true });
 
   const client = new Client({
-    authStrategy: auth,
+    authStrategy: new LocalAuth({
+      dataPath: DATA_BASE,
+      clientId: sessionId || 'default',
+    }),
     puppeteer: { executablePath, args, headless },
   });
 
