@@ -2,9 +2,10 @@ import fs from "fs";
 import path from "path";
 import QRCode from "qrcode-terminal";
 import { v4 as uuidv4 } from "uuid";
-import { Client, LocalAuth, MessageMedia } from "whatsapp-web.js";
+import { Client, MessageMedia } from "whatsapp-web.js";
 import { config } from "../config";
 import { SendMessageResponse, WhatsAppSession, BulkMessageRequest, BulkMessageResponse, BulkMessageStatus, PersonalizedBulkMessageRequest } from "../types";
+import { createWhatsAppClient } from "../wa/createClient";
 
 export class WhatsAppService {
   private sessions: Map<string, { client: Client; session: WhatsAppSession }> =
@@ -90,25 +91,7 @@ export class WhatsAppService {
       status: "initializing",
     };
 
-    const client = new Client({
-      authStrategy: new LocalAuth({
-        clientId: id,
-        dataPath: path.join(config.sessionPath, id),
-      }),
-      puppeteer: {
-        headless: true,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-accelerated-2d-canvas",
-          "--no-first-run",
-          "--no-zygote",
-          "--single-process",
-          "--disable-gpu",
-        ],
-      },
-    });
+    const client = await createWhatsAppClient(id);
 
     this.setupClientEvents(client, session);
     this.sessions.set(id, { client, session });
@@ -118,7 +101,8 @@ export class WhatsAppService {
       return session;
     } catch (error) {
       this.sessions.delete(id);
-      throw new Error(`Failed to initialize session: ${error}`);
+      // Rethrow original error to preserve error details for HTTP handler
+      throw error;
     }
   }
 

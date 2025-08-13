@@ -47,12 +47,24 @@ export class WhatsAppController {
 
       res.status(201).json(response);
     } catch (error) {
-      const response: ApiResponse = {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-
-      res.status(400).json(response);
+      const msg = String((error as any)?.message || error);
+      const isChromiumLaunch = /Failed to launch the browser process|libnss3|Chromium|chrome|puppeteer/i.test(msg);
+      
+      if (isChromiumLaunch) {
+        res.set('Retry-After', '30');
+        res.status(503).json({ 
+          code: 'WA_INIT_FAIL', 
+          retryable: true, 
+          message: msg 
+        });
+        return;
+      }
+      
+      res.status(500).json({ 
+        code: 'WA_INIT_ERROR', 
+        retryable: false, 
+        message: msg 
+      });
     }
   };
 
