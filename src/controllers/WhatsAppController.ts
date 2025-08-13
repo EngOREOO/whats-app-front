@@ -61,7 +61,7 @@ export class WhatsAppController {
       }
       
       res.status(500).json({ 
-        code: 'WA_INIT_ERROR', 
+        code: 'WA_INIT_FAIL', 
         retryable: false, 
         message: msg 
       });
