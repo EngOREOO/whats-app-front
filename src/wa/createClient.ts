@@ -6,14 +6,22 @@ import path from 'path';
 const DATA_BASE = process.env.WWEBJS_DATA_PATH || '/tmp/wwebjs_auth';
 
 export async function createWhatsAppClient(sessionId?: string) {
-  const executablePath = await chromium.executablePath();
+  // Use system Chromium if available, otherwise fall back to @sparticuz/chromium
+  const executablePath = process.env.CHROMIUM_PATH || await chromium.executablePath();
   const args = [
-    ...chromium.args,
     '--no-sandbox',
     '--disable-setuid-sandbox',
     '--disable-dev-shm-usage',
     '--no-zygote',
     '--single-process',
+    '--disable-gpu',
+    '--disable-software-rasterizer',
+    '--disable-extensions',
+    '--disable-background-timer-throttling',
+    '--disable-backgrounding-occluded-windows',
+    '--disable-renderer-backgrounding',
+    '--disable-features=TranslateUI',
+    '--disable-ipc-flooding-protection',
   ];
   const headless = true; // Always headless in Cloud Run
 
