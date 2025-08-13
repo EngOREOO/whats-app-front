@@ -28,7 +28,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpangocairo-1.0-0 \
     libpango-1.0-0 \
     libgtk-3-0 \
+    libxshmfence1 \
+    libxi6 \
+    libdrm2 \
     fonts-liberation \
+    fonts-noto-color-emoji \
+    tzdata \
     ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
