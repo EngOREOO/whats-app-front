@@ -47,7 +47,8 @@ export class WhatsAppController {
 
       res.status(201).json(response);
     } catch (error) {
-      const msg = String((error as any)?.message || error);
+      const err = error as any;
+      const msg = String(err?.message || error);
       const isChromiumLaunch = /Failed to launch the browser process|Chromium|libnss3/i.test(msg);
       
       if (isChromiumLaunch) {
@@ -60,10 +61,21 @@ export class WhatsAppController {
         return;
       }
       
+      // Log the full error details for debugging
+      console.error('[WA_INIT_ERROR]', { 
+        name: err?.name, 
+        message: err?.message, 
+        stack: err?.stack 
+      });
+      
+      // Return JSON with error fingerprint and name
+      const fp = (err?.message || '').slice(0, 120);
       res.status(500).json({ 
-        code: 'WA_INIT_FAIL', 
+        code: 'WA_INIT_ERROR', 
         retryable: false, 
-        message: msg 
+        name: err?.name, 
+        message: msg, 
+        fp 
       });
     }
   };

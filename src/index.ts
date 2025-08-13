@@ -6,6 +6,7 @@ import { config, isDevelopment, isProduction } from './config';
 import routes from './routes';
 import { errorHandler, notFound } from './middlewares/errorHandler';
 import { logger } from './utils/logger';
+import { diagPuppeteer } from './controllers/DiagController';
 
 const app = express();
 
@@ -333,6 +334,9 @@ app.use((req, res, next) => {
 app.get('/healthz', (_req, res) => {
   res.status(200).json({ ok: true });
 });
+
+// Diagnostic endpoint for Puppeteer testing
+app.get('/diag/puppeteer', diagPuppeteer);
 
 // API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
